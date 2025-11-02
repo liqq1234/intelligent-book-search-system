@@ -30,3 +30,6 @@ Thumbs.db
 *.nupkg
 *.snupkg
 packages/
+
+# 文档文件夹（包含项目汇报等内部文档）
+文档/
