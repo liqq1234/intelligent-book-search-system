@@ -1,0 +1,133 @@
+@page "/"
+@using BookSearchSystem.Blazor.Services
+@using BookSearchSystem.Blazor.Models
+@inject IBookService BookService
+@inject NavigationManager Navigation
+
+<PageTitle>首页 - 图书智能检索系统</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large">
+    <!-- Hero Section -->
+    <MudPaper Elevation="0" Class="pa-8 mb-4" Style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+        <MudText Typo="Typo.h3" Align="Align.Center" Class="mb-2">📚 图书智能检索系统</MudText>
+        <MudText Typo="Typo.h6" Align="Align.Center" Class="mb-4">智能对话 · 精准搜索 · 个性推荐</MudText>
+        
+        <div class="d-flex justify-center gap-4">
+            <MudButton Variant="Variant.Filled" 
+                       Color="Color.Surface" 
+                       Size="Size.Large"
+                       StartIcon="@Icons.Material.Filled.Chat"
+                       Href="/chat">
+                开始对话
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" 
+                       Style="color: white; border-color: white;"
+                       Size="Size.Large"
+                       StartIcon="@Icons.Material.Filled.Search"
+                       Href="/search">
+                搜索图书
+            </MudButton>
+        </div>
+    </MudPaper>
+
+    <!-- Quick Actions -->
+    <MudText Typo="Typo.h5" Class="mb-3">快捷操作</MudText>
+    <MudGrid Class="mb-4">
+        <MudItem xs="12" sm="6" md="3">
+            <MudCard Elevation="2" Class="pa-4" Style="cursor: pointer;" @onclick="@(() => Navigation.NavigateTo("/chat"))">
+                <MudCardContent Class="text-center">
+                    <MudIcon Icon="@Icons.Material.Filled.Chat" Size="Size.Large" Color="Color.Primary" Class="mb-2" />
+                    <MudText Typo="Typo.h6">智能对话</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">与AI助手对话查询</MudText>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+        
+        <MudItem xs="12" sm="6" md="3">
+            <MudCard Elevation="2" Class="pa-4" Style="cursor: pointer;" @onclick="@(() => Navigation.NavigateTo("/search"))">
+                <MudCardContent Class="text-center">
+                    <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Large" Color="Color.Secondary" Class="mb-2" />
+                    <MudText Typo="Typo.h6">高级搜索</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">多条件精准搜索</MudText>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+        
+        <MudItem xs="12" sm="6" md="3">
+            <MudCard Elevation="2" Class="pa-4" Style="cursor: pointer;" @onclick="@(() => Navigation.NavigateTo("/favorites"))">
+                <MudCardContent Class="text-center">
+                    <MudIcon Icon="@Icons.Material.Filled.Favorite" Size="Size.Large" Color="Color.Error" Class="mb-2" />
+                    <MudText Typo="Typo.h6">我的收藏</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">查看收藏的图书</MudText>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+        
+        <MudItem xs="12" sm="6" md="3">
+            <MudCard Elevation="2" Class="pa-4" Style="cursor: pointer;" @onclick="@(() => Navigation.NavigateTo("/statistics"))">
+                <MudCardContent Class="text-center">
+                    <MudIcon Icon="@Icons.Material.Filled.BarChart" Size="Size.Large" Color="Color.Success" Class="mb-2" />
+                    <MudText Typo="Typo.h6">统计分析</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">查看数据统计</MudText>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+
+    <!-- Recommended Books -->
+    <MudText Typo="Typo.h5" Class="mb-3">推荐图书</MudText>
+    @if (isLoading)
+    {
+        <div class="d-flex justify-center pa-8">
+            <MudProgressCircular Indeterminate="true" Size="Size.Large" />
+        </div>
+    }
+    else if (recommendedBooks.Any())
+    {
+        <MudGrid>
+            @foreach (var book in recommendedBooks.Take(8))
+            {
+                <MudItem xs="12" sm="6" md="4" lg="3">
+                    <BookCard Book="@book" OnAddToFavorites="HandleAddToFavorites" />
+                </MudItem>
+            }
+        </MudGrid>
+    }
+    else
+    {
+        <MudAlert Severity="Severity.Info">暂无推荐图书</MudAlert>
+    }
+</MudContainer>
+
+@code {
+    private List<Book> recommendedBooks = new();
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadRecommendedBooks();
+    }
+
+    private async Task LoadRecommendedBooks()
+    {
+        isLoading = true;
+        try
+        {
+            recommendedBooks = await BookService.GetRecommendedBooksAsync(8);
+        }
+        catch (Exception)
+        {
+            // Handle error silently for demo
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private Task HandleAddToFavorites(int bookId)
+    {
+        // TODO: Implement favorites functionality
+        return Task.CompletedTask;
+    }
+}

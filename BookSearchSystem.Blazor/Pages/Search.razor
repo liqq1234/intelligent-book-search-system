@@ -1,0 +1,165 @@
+@page "/search"
+@using BookSearchSystem.Blazor.Services
+@using BookSearchSystem.Blazor.Models
+@using BookSearchSystem.Blazor.DTOs
+@inject IBookService BookService
+@inject ISnackbar Snackbar
+
+<PageTitle>图书搜索 - 图书智能检索系统</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large">
+    <MudText Typo="Typo.h4" Class="mb-4">
+        <MudIcon Icon="@Icons.Material.Filled.Search" Class="mr-2" />
+        图书搜索
+    </MudText>
+
+    <!-- Search Form -->
+    <MudPaper Elevation="2" Class="pa-4 mb-4">
+        <MudGrid>
+            <MudItem xs="12" sm="6" md="3">
+                <MudTextField @bind-Value="searchRequest.Title" 
+                              Label="书名" 
+                              Variant="Variant.Outlined"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Book" />
+            </MudItem>
+            
+            <MudItem xs="12" sm="6" md="3">
+                <MudTextField @bind-Value="searchRequest.Author" 
+                              Label="作者" 
+                              Variant="Variant.Outlined"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Person" />
+            </MudItem>
+            
+            <MudItem xs="12" sm="6" md="3">
+                <MudTextField @bind-Value="searchRequest.Category" 
+                              Label="分类" 
+                              Variant="Variant.Outlined"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Category" />
+            </MudItem>
+            
+            <MudItem xs="12" sm="6" md="3" Class="d-flex align-center">
+                <MudButton Variant="Variant.Filled" 
+                           Color="Color.Primary" 
+                           FullWidth="true"
+                           OnClick="SearchBooks"
+                           Disabled="@isLoading"
+                           StartIcon="@Icons.Material.Filled.Search">
+                    搜索
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+        
+        <div class="d-flex justify-end mt-2">
+            <MudButton Size="Size.Small" 
+                       Variant="Variant.Text" 
+                       OnClick="ClearSearch"
+                       StartIcon="@Icons.Material.Filled.Clear">
+                清空条件
+            </MudButton>
+        </div>
+    </MudPaper>
+
+    <!-- Search Results -->
+    @if (isLoading)
+    {
+        <div class="d-flex justify-center pa-8">
+            <MudProgressCircular Indeterminate="true" Size="Size.Large" />
+        </div>
+    }
+    else if (searchResponse != null && searchResponse.Books.Any())
+    {
+        <MudText Typo="Typo.h6" Class="mb-3">
+            找到 @searchResponse.Total 本图书 (第 @searchResponse.Page 页)
+        </MudText>
+        
+        <MudGrid>
+            @foreach (var book in searchResponse.Books)
+            {
+                <MudItem xs="12" sm="6" md="4" lg="3">
+                    <BookCard Book="@book" OnAddToFavorites="HandleAddToFavorites" />
+                </MudItem>
+            }
+        </MudGrid>
+        
+        <!-- Pagination -->
+        <div class="d-flex justify-center mt-4">
+            <MudPagination Count="@GetTotalPages()" 
+                           Selected="@searchRequest.Page" 
+                           SelectedChanged="OnPageChanged"
+                           Color="Color.Primary" />
+        </div>
+    }
+    else if (hasSearched)
+    {
+        <MudAlert Severity="Severity.Info" Class="mt-4">
+            未找到符合条件的图书，请尝试其他搜索条件
+        </MudAlert>
+    }
+    else
+    {
+        <MudPaper Elevation="0" Class="pa-8 text-center">
+            <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" Color="Color.Secondary" Class="mb-2" />
+            <MudText Typo="Typo.h6" Color="Color.Secondary">请输入搜索条件开始查找图书</MudText>
+        </MudPaper>
+    }
+</MudContainer>
+
+@code {
+    private SearchRequest searchRequest = new() { Page = 1, PageSize = 12 };
+    private BookSearchResponse? searchResponse;
+    private bool isLoading = false;
+    private bool hasSearched = false;
+
+    private async Task SearchBooks()
+    {
+        isLoading = true;
+        hasSearched = true;
+        searchRequest.Page = 1;
+        
+        try
+        {
+            searchResponse = await BookService.SearchBooksAsync(searchRequest);
+            
+            if (!searchResponse.Success)
+            {
+                Snackbar.Add("搜索失败，请稍后重试", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"搜索出错: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void ClearSearch()
+    {
+        searchRequest = new() { Page = 1, PageSize = 12 };
+        searchResponse = null;
+        hasSearched = false;
+    }
+
+    private async Task OnPageChanged(int page)
+    {
+        searchRequest.Page = page;
+        await SearchBooks();
+    }
+
+    private int GetTotalPages()
+    {
+        if (searchResponse == null || searchResponse.Total == 0) return 1;
+        return (int)Math.Ceiling((double)searchResponse.Total / searchRequest.PageSize);
+    }
+
+    private Task HandleAddToFavorites(int bookId)
+    {
+        Snackbar.Add("已添加到收藏", Severity.Success);
+        return Task.CompletedTask;
+    }
+}

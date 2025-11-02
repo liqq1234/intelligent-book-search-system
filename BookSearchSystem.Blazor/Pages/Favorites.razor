@@ -1,0 +1,24 @@
+@page "/favorites"
+
+<PageTitle>我的收藏 - 图书智能检索系统</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large">
+    <MudText Typo="Typo.h4" Class="mb-4">
+        <MudIcon Icon="@Icons.Material.Filled.Favorite" Class="mr-2" />
+        我的收藏
+    </MudText>
+
+    <MudPaper Elevation="0" Class="pa-8 text-center">
+        <MudIcon Icon="@Icons.Material.Filled.FavoriteBorder" Size="Size.Large" Color="Color.Secondary" Class="mb-2" />
+        <MudText Typo="Typo.h6" Color="Color.Secondary">暂无收藏的图书</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">
+            浏览图书时点击收藏按钮即可添加到这里
+        </MudText>
+        <MudButton Variant="Variant.Filled" 
+                   Color="Color.Primary" 
+                   Href="/search"
+                   StartIcon="@Icons.Material.Filled.Search">
+            去搜索图书
+        </MudButton>
+    </MudPaper>
+</MudContainer>

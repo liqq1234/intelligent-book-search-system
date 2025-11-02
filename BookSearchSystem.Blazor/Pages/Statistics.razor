@@ -1,0 +1,88 @@
+@page "/statistics"
+
+<PageTitle>统计分析 - 图书智能检索系统</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large">
+    <MudText Typo="Typo.h4" Class="mb-4">
+        <MudIcon Icon="@Icons.Material.Filled.BarChart" Class="mr-2" />
+        统计分析
+    </MudText>
+
+    <!-- Statistics Cards -->
+    <MudGrid Class="mb-4">
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="2" Class="pa-4">
+                <div class="d-flex justify-space-between align-center">
+                    <div>
+                        <MudText Typo="Typo.subtitle2" Color="Color.Secondary">图书总数</MudText>
+                        <MudText Typo="Typo.h4">1,234</MudText>
+                    </div>
+                    <MudIcon Icon="@Icons.Material.Filled.Book" Size="Size.Large" Color="Color.Primary" />
+                </div>
+            </MudPaper>
+        </MudItem>
+        
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="2" Class="pa-4">
+                <div class="d-flex justify-space-between align-center">
+                    <div>
+                        <MudText Typo="Typo.subtitle2" Color="Color.Secondary">分类数量</MudText>
+                        <MudText Typo="Typo.h4">25</MudText>
+                    </div>
+                    <MudIcon Icon="@Icons.Material.Filled.Category" Size="Size.Large" Color="Color.Secondary" />
+                </div>
+            </MudPaper>
+        </MudItem>
+        
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="2" Class="pa-4">
+                <div class="d-flex justify-space-between align-center">
+                    <div>
+                        <MudText Typo="Typo.subtitle2" Color="Color.Secondary">借阅次数</MudText>
+                        <MudText Typo="Typo.h4">5,678</MudText>
+                    </div>
+                    <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Size="Size.Large" Color="Color.Success" />
+                </div>
+            </MudPaper>
+        </MudItem>
+        
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="2" Class="pa-4">
+                <div class="d-flex justify-space-between align-center">
+                    <div>
+                        <MudText Typo="Typo.subtitle2" Color="Color.Secondary">在借图书</MudText>
+                        <MudText Typo="Typo.h4">89</MudText>
+                    </div>
+                    <MudIcon Icon="@Icons.Material.Filled.MenuBook" Size="Size.Large" Color="Color.Warning" />
+                </div>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    <!-- Charts Placeholder -->
+    <MudGrid>
+        <MudItem xs="12" md="6">
+            <MudPaper Elevation="2" Class="pa-4">
+                <MudText Typo="Typo.h6" Class="mb-3">热门分类</MudText>
+                <MudPaper Elevation="0" Class="pa-8 text-center" Style="background-color: var(--mud-palette-background-grey);">
+                    <MudIcon Icon="@Icons.Material.Filled.PieChart" Size="Size.Large" Color="Color.Secondary" />
+                    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-2">
+                        图表功能开发中...
+                    </MudText>
+                </MudPaper>
+            </MudPaper>
+        </MudItem>
+        
+        <MudItem xs="12" md="6">
+            <MudPaper Elevation="2" Class="pa-4">
+                <MudText Typo="Typo.h6" Class="mb-3">借阅趋势</MudText>
+                <MudPaper Elevation="0" Class="pa-8 text-center" Style="background-color: var(--mud-palette-background-grey);">
+                    <MudIcon Icon="@Icons.Material.Filled.ShowChart" Size="Size.Large" Color="Color.Secondary" />
+                    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-2">
+                        图表功能开发中...
+                    </MudText>
+                </MudPaper>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</MudContainer>

@@ -1,0 +1,211 @@
+@page "/chat"
+@using BookSearchSystem.Blazor.Services
+@using BookSearchSystem.Blazor.Models
+@inject IChatService ChatService
+@inject ISnackbar Snackbar
+
+<PageTitle>智能对话 - 图书智能检索系统</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large">
+    <MudPaper Elevation="2" Class="pa-4">
+        <MudText Typo="Typo.h4" Class="mb-4">
+            <MudIcon Icon="@Icons.Material.Filled.Chat" Class="mr-2" />
+            智能对话
+        </MudText>
+        
+        <!-- Chat Messages Container -->
+        <MudPaper Elevation="0" Class="chat-container pa-4 mb-4" Style="height: 500px; overflow-y: auto; background-color: var(--mud-palette-background-grey);">
+            @if (!messages.Any())
+            {
+                <div class="d-flex flex-column align-center justify-center" style="height: 100%;">
+                    <MudIcon Icon="@Icons.Material.Filled.SmartToy" Size="Size.Large" Color="Color.Secondary" Class="mb-2" />
+                    <MudText Typo="Typo.h6" Color="Color.Secondary">您好！我是图书智能检索助手</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">请输入您的问题，我会帮您查找相关图书</MudText>
+                    
+                    <MudGrid Class="mt-4" Style="max-width: 600px;">
+                        <MudItem xs="12" sm="6">
+                            <MudButton Variant="Variant.Outlined" 
+                                       FullWidth="true" 
+                                       OnClick="@(() => SendQuickMessage("推荐一些机器学习的书"))">
+                                推荐机器学习书籍
+                            </MudButton>
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudButton Variant="Variant.Outlined" 
+                                       FullWidth="true" 
+                                       OnClick="@(() => SendQuickMessage("有哪些Python编程的书"))">
+                                Python编程书籍
+                            </MudButton>
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudButton Variant="Variant.Outlined" 
+                                       FullWidth="true" 
+                                       OnClick="@(() => SendQuickMessage("推荐一些数据结构的书"))">
+                                数据结构书籍
+                            </MudButton>
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudButton Variant="Variant.Outlined" 
+                                       FullWidth="true" 
+                                       OnClick="@(() => SendQuickMessage("有什么好的算法书"))">
+                                算法相关书籍
+                            </MudButton>
+                        </MudItem>
+                    </MudGrid>
+                </div>
+            }
+            else
+            {
+                @foreach (var message in messages)
+                {
+                    <ChatMessage Message="@message" />
+                }
+                
+                @if (isLoading)
+                {
+                    <div class="d-flex align-center mb-3">
+                        <MudAvatar Color="Color.Secondary" Class="mr-2">
+                            <MudIcon Icon="@Icons.Material.Filled.SmartToy" />
+                        </MudAvatar>
+                        <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+                        <MudText Typo="Typo.body2" Class="ml-2">正在思考...</MudText>
+                    </div>
+                }
+                
+                <div @ref="messagesEnd"></div>
+            }
+        </MudPaper>
+        
+        <!-- Input Area -->
+        <div class="d-flex gap-2">
+            <MudTextField @bind-Value="userInput" 
+                          Label="输入您的问题..." 
+                          Variant="Variant.Outlined"
+                          FullWidth="true"
+                          OnKeyDown="HandleKeyDown"
+                          Disabled="@isLoading"
+                          Adornment="Adornment.End"
+                          AdornmentIcon="@Icons.Material.Filled.Send"
+                          OnAdornmentClick="SendMessage" />
+            <MudButton Variant="Variant.Filled" 
+                       Color="Color.Primary" 
+                       OnClick="SendMessage"
+                       Disabled="@(isLoading || string.IsNullOrWhiteSpace(userInput))"
+                       Size="Size.Large">
+                发送
+            </MudButton>
+        </div>
+        
+        <div class="d-flex justify-space-between mt-2">
+            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                提示: 按 Enter 发送消息
+            </MudText>
+            <MudButton Size="Size.Small" 
+                       Variant="Variant.Text" 
+                       Color="Color.Error"
+                       OnClick="ClearChat"
+                       StartIcon="@Icons.Material.Filled.Delete">
+                清空对话
+            </MudButton>
+        </div>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private List<ChatMessageModel> messages = new();
+    private string userInput = "";
+    private bool isLoading = false;
+    private ElementReference messagesEnd;
+
+    private async Task SendMessage()
+    {
+        if (string.IsNullOrWhiteSpace(userInput)) return;
+        
+        await SendQuickMessage(userInput);
+    }
+
+    private async Task SendQuickMessage(string message)
+    {
+        isLoading = true;
+        
+        // Add user message
+        var userMessage = new ChatMessageModel
+        {
+            Role = "user",
+            Content = message,
+            Timestamp = DateTime.Now
+        };
+        messages.Add(userMessage);
+        
+        var currentInput = message;
+        userInput = "";
+        
+        try
+        {
+            // Call API
+            var response = await ChatService.SendMessageAsync(currentInput);
+            
+            // Add AI response
+            var aiMessage = new ChatMessageModel
+            {
+                Role = "assistant",
+                Content = response.Content,
+                Books = response.Books,
+                Timestamp = DateTime.Now
+            };
+            messages.Add(aiMessage);
+            
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"发送失败: {ex.Message}", Severity.Error);
+            
+            // Add error message
+            var errorMessage = new ChatMessageModel
+            {
+                Role = "assistant",
+                Content = "抱歉，发送消息时出现错误。请稍后重试。",
+                Timestamp = DateTime.Now
+            };
+            messages.Add(errorMessage);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+    
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !e.ShiftKey)
+        {
+            await SendMessage();
+        }
+    }
+
+    private void ClearChat()
+    {
+        messages.Clear();
+        userInput = "";
+    }
+}
+
+<style>
+    .chat-container::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    .chat-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+    
+    .chat-container::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 4px;
+    }
+    
+    .chat-container::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+</style>

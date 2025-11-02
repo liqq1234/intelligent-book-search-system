@@ -1,0 +1,173 @@
+@page "/book/{BookId:int}"
+@using BookSearchSystem.Blazor.Services
+@using BookSearchSystem.Blazor.Models
+@inject IBookService BookService
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+<PageTitle>@(book?.Title ?? "图书详情") - 图书智能检索系统</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large">
+    @if (isLoading)
+    {
+        <div class="d-flex justify-center pa-8">
+            <MudProgressCircular Indeterminate="true" Size="Size.Large" />
+        </div>
+    }
+    else if (book != null)
+    {
+        <MudBreadcrumbs Items="_breadcrumbs" Class="mb-4"></MudBreadcrumbs>
+        
+        <MudGrid>
+            <!-- Book Cover -->
+            <MudItem xs="12" md="4">
+                <MudPaper Elevation="4" Class="pa-4">
+                    <MudImage Src="@(book.CoverUrl ?? "https://via.placeholder.com/300x400?text=No+Cover")" 
+                              Alt="@book.Title" 
+                              Class="rounded" 
+                              Style="width: 100%;" />
+                    
+                    <MudDivider Class="my-3" />
+                    
+                    <MudButton Variant="Variant.Filled" 
+                               Color="Color.Primary" 
+                               FullWidth="true"
+                               StartIcon="@Icons.Material.Filled.ShoppingCart"
+                               Class="mb-2"
+                               Disabled="@(book.Stock == 0)">
+                        @(book.Stock > 0 ? "借阅图书" : "暂无库存")
+                    </MudButton>
+                    
+                    <MudButton Variant="Variant.Outlined" 
+                               Color="Color.Secondary" 
+                               FullWidth="true"
+                               StartIcon="@Icons.Material.Filled.Favorite"
+                               OnClick="AddToFavorites">
+                        加入收藏
+                    </MudButton>
+                </MudPaper>
+            </MudItem>
+            
+            <!-- Book Details -->
+            <MudItem xs="12" md="8">
+                <MudPaper Elevation="2" Class="pa-4">
+                    <MudText Typo="Typo.h4" Class="mb-2">@book.Title</MudText>
+                    
+                    <div class="d-flex align-center mb-3">
+                        <MudChip T="string" Color="Color.Primary" Size="Size.Small">@book.Category</MudChip>
+                        <MudChip T="string" 
+                                 Color="@(book.Stock > 0 ? Color.Success : Color.Error)" 
+                                 Size="Size.Small" 
+                                 Icon="@Icons.Material.Filled.Inventory">
+                            @(book.Stock > 0 ? $"库存: {book.Stock}" : "缺货")
+                        </MudChip>
+                    </div>
+                    
+                    <MudDivider Class="my-3" />
+                    
+                    <MudGrid>
+                        <MudItem xs="12" sm="6">
+                            <MudText Typo="Typo.subtitle2" Color="Color.Secondary">作者</MudText>
+                            <MudText Typo="Typo.body1" Class="mb-2">
+                                <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Small" /> @book.Author
+                            </MudText>
+                        </MudItem>
+                        
+                        <MudItem xs="12" sm="6">
+                            <MudText Typo="Typo.subtitle2" Color="Color.Secondary">出版社</MudText>
+                            <MudText Typo="Typo.body1" Class="mb-2">
+                                <MudIcon Icon="@Icons.Material.Filled.Business" Size="Size.Small" /> @book.Publisher
+                            </MudText>
+                        </MudItem>
+                        
+                        <MudItem xs="12" sm="6">
+                            <MudText Typo="Typo.subtitle2" Color="Color.Secondary">出版日期</MudText>
+                            <MudText Typo="Typo.body1" Class="mb-2">
+                                <MudIcon Icon="@Icons.Material.Filled.CalendarToday" Size="Size.Small" /> 
+                                @(book.PublishDate?.ToString("yyyy-MM-dd") ?? "未知")
+                            </MudText>
+                        </MudItem>
+                        
+                        <MudItem xs="12" sm="6">
+                            <MudText Typo="Typo.subtitle2" Color="Color.Secondary">ISBN</MudText>
+                            <MudText Typo="Typo.body1" Class="mb-2">
+                                <MudIcon Icon="@Icons.Material.Filled.QrCode" Size="Size.Small" /> @book.ISBN
+                            </MudText>
+                        </MudItem>
+                        
+                        <MudItem xs="12">
+                            <MudText Typo="Typo.h4" Color="Color.Primary" Class="mt-2">
+                                ¥@book.Price.ToString("F2")
+                            </MudText>
+                        </MudItem>
+                    </MudGrid>
+                    
+                    <MudDivider Class="my-3" />
+                    
+                    <MudText Typo="Typo.h6" Class="mb-2">图书简介</MudText>
+                    <MudText Typo="Typo.body1" Style="white-space: pre-wrap;">
+                        @(book.Description ?? "暂无简介")
+                    </MudText>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    }
+    else
+    {
+        <MudAlert Severity="Severity.Error" Class="mt-4">
+            未找到该图书信息
+        </MudAlert>
+        <MudButton Variant="Variant.Filled" 
+                   Color="Color.Primary" 
+                   Href="/"
+                   Class="mt-2">
+            返回首页
+        </MudButton>
+    }
+</MudContainer>
+
+@code {
+    [Parameter]
+    public int BookId { get; set; }
+    
+    private Book? book;
+    private bool isLoading = true;
+    private List<BreadcrumbItem> _breadcrumbs = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadBookDetails();
+    }
+
+    private async Task LoadBookDetails()
+    {
+        isLoading = true;
+        try
+        {
+            book = await BookService.GetBookByIdAsync(BookId);
+            
+            if (book != null)
+            {
+                _breadcrumbs = new List<BreadcrumbItem>
+                {
+                    new BreadcrumbItem("首页", href: "/"),
+                    new BreadcrumbItem("搜索", href: "/search"),
+                    new BreadcrumbItem(book.Title, href: null, disabled: true)
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"加载失败: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void AddToFavorites()
+    {
+        Snackbar.Add("已添加到收藏", Severity.Success);
+    }
+}

@@ -1,0 +1,49 @@
+@page "/settings"
+
+<PageTitle>设置 - 图书智能检索系统</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Medium">
+    <MudText Typo="Typo.h4" Class="mb-4">
+        <MudIcon Icon="@Icons.Material.Filled.Settings" Class="mr-2" />
+        设置
+    </MudText>
+
+    <MudPaper Elevation="2" Class="pa-4 mb-4">
+        <MudText Typo="Typo.h6" Class="mb-3">外观设置</MudText>
+        
+        <MudSwitch @bind-Value="@_darkMode" 
+                   Color="Color.Primary"
+                   Label="深色模式" 
+                   Class="mb-2" />
+        
+        <MudDivider Class="my-3" />
+        
+        <MudText Typo="Typo.h6" Class="mb-3">通知设置</MudText>
+        
+        <MudSwitch @bind-Value="@_notifications" 
+                   Color="Color.Primary"
+                   Label="启用通知" 
+                   Class="mb-2" />
+    </MudPaper>
+
+    <MudPaper Elevation="2" Class="pa-4">
+        <MudText Typo="Typo.h6" Class="mb-3">关于</MudText>
+        
+        <MudText Typo="Typo.body1" Class="mb-2">
+            <strong>版本:</strong> 1.0.0
+        </MudText>
+        
+        <MudText Typo="Typo.body1" Class="mb-2">
+            <strong>技术栈:</strong> Blazor WebAssembly + MudBlazor
+        </MudText>
+        
+        <MudText Typo="Typo.body1">
+            <strong>开发时间:</strong> 2025年11月
+        </MudText>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private bool _darkMode = false;
+    private bool _notifications = true;
+}
