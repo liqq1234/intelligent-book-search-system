@@ -13,28 +13,44 @@
 ## 技术栈
 
 - **开发语言**: C# (.NET 8.0)
-- **AI框架**: Microsoft Semantic Kernel
-- **AI模型**: Azure OpenAI GPT-4
-- **数据库**: Microsoft SQL Server
+- **前端**: Blazor WebAssembly + MudBlazor
+- **后端**: ASP.NET Core Web API
+- **AI框架**: Microsoft Semantic Kernel v1.30.0
+- **AI模型**: Ollama + Qwen2.5:7b
+- **数据库**: Microsoft SQL Server (Docker)
 - **ORM**: Dapper
-- **日志**: Serilog
+- **架构**: Clean Architecture
 
 ## 项目结构
 
 ```
 图书智能检索系统/
-├── Database/                 # 数据库脚本
-│   └── InitDatabase.sql     # 数据库初始化脚本
-├── Models/                   # 数据模型
-│   └── Book.cs              # 图书、作者等实体类
-├── Services/                 # 服务层
-│   ├── DatabaseService.cs   # 数据库服务
-│   └── TextToSqlService.cs  # Text-to-SQL服务
-├── Plugins/                  # Semantic Kernel插件
-│   └── BookSearchPlugin.cs  # 图书搜索插件
-├── Program.cs               # 主程序
-├── appsettings.json         # 配置文件
-└── BookSearchSystem.csproj  # 项目文件
+├── src/                                    # 源代码目录
+│   ├── BookSearchSystem.WebAPI/           # 后端 API 项目
+│   │   ├── Controllers/                   # API 控制器
+│   │   ├── Services/                      # 业务服务层
+│   │   ├── DTOs/                          # 数据传输对象
+│   │   ├── Program.cs                     # API 启动入口
+│   │   └── appsettings.json              # API 配置文件
+│   │
+│   ├── BookSearchSystem.Blazor/           # 前端 Blazor WebAssembly 项目
+│   │   ├── Pages/                         # 页面组件
+│   │   ├── Services/                      # 前端服务
+│   │   ├── Models/                        # 前端模型
+│   │   └── Program.cs                     # 前端启动入口
+│   │
+│   └── BookSearchSystem.Shared/           # 共享类库
+│       ├── DTOs/                          # 共享数据传输对象
+│       └── Models/                        # 共享数据模型
+│
+├── database/                              # 数据库脚本
+│   └── InitDatabase.sql                  # 数据库初始化脚本
+│
+├── tests/                                 # 测试项目（待添加）
+├── BookSearchSystem.sln                   # 解决方案文件
+├── Directory.Build.props                  # 统一项目配置
+├── .gitignore                            # Git 忽略配置
+└── README.md                             # 项目说明文档
 ```
 
 ## 快速开始
@@ -42,48 +58,80 @@
 ### 1. 环境要求
 
 - .NET 8.0 SDK 或更高版本
-- SQL Server 2019 或更高版本
-- Azure OpenAI 账号和API密钥
+- Docker Desktop
+- Ollama (本地 AI 模型服务)
 
-### 2. 数据库初始化
-
-在SQL Server中执行初始化脚本:
+### 2. 启动 SQL Server (Docker)
 
 ```bash
-sqlcmd -S localhost -i Database/InitDatabase.sql
+docker run -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=YourStrong@Passw0rd" \
+   -p 1433:1433 --name sqlserver \
+   -d mcr.microsoft.com/mssql/server:2019-latest
 ```
 
-或在SQL Server Management Studio (SSMS)中打开并执行 `Database/InitDatabase.sql`
+### 3. 初始化数据库
 
-### 3. 配置应用
+在 SQL Server 中执行初始化脚本:
 
-编辑 `appsettings.json` 文件,配置以下信息:
+```bash
+sqlcmd -S localhost -U sa -P YourStrong@Passw0rd -i database/InitDatabase.sql
+```
+
+### 4. 启动 Ollama 并下载模型
+
+```bash
+# 启动 Ollama
+ollama serve
+
+# 下载 Qwen2.5:7b 模型
+ollama pull qwen2.5:7b
+```
+
+### 5. 配置应用
+
+编辑 `src/BookSearchSystem.WebAPI/appsettings.json`:
 
 ```json
 {
   "ConnectionStrings": {
-    "BookDatabase": "Server=localhost;Database=BookLibrary;Trusted_Connection=True;TrustServerCertificate=True;"
+    "BookDatabase": "Server=localhost,1433;Database=BookLibrary;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;"
   },
-  "AzureOpenAI": {
-    "Endpoint": "https://your-resource.openai.azure.com/",
-    "ApiKey": "your-api-key-here",
-    "DeploymentName": "gpt-4",
-    "ApiVersion": "2024-02-15-preview"
+  "Ollama": {
+    "Endpoint": "http://localhost:11434",
+    "ModelName": "qwen2.5:7b"
   }
 }
 ```
 
-### 4. 安装依赖
+### 6. 安装依赖
 
 ```bash
 dotnet restore
 ```
 
-### 5. 运行应用
+### 7. 运行应用
+
+#### 运行后端 API
 
 ```bash
+cd src/BookSearchSystem.WebAPI
 dotnet run
 ```
+
+后端 API 将在 `https://localhost:5001` 启动
+
+#### 运行前端 Blazor
+
+```bash
+cd src/BookSearchSystem.Blazor
+dotnet run
+```
+
+前端应用将在 `https://localhost:5002` 启动
+
+#### 使用 Visual Studio
+
+直接打开 `BookSearchSystem.sln` 解决方案文件，设置多个启动项目同时运行前后端。
 
 ## 使用示例
 

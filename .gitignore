@@ -33,3 +33,8 @@ packages/
 
 # 文档文件夹（包含项目汇报等内部文档）
 文档/
+docs/
+给老师的汇报.md
+
+# 敏感配置文件
+src/BookSearchSystem.WebAPI/appsettings.json
